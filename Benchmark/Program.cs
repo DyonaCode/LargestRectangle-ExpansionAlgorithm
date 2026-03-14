@@ -79,48 +79,35 @@ public class ReferenceRectangleBenchmarks : RectangleBenchmarkBase
 
     protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
         [_prefix, _stack, _expansion];
-
-    [Benchmark(Baseline = true)]
+    
+    // [Benchmark(Baseline = true)]
     public int[,] Prefix() => _prefix.Solve(Grid);
 
-    [Benchmark]
+   //[Benchmark]
     public int[,] StackHistogram() => _stack.Solve(Grid);
 
-    [Benchmark]
+    // [Benchmark]
     public int[,] Expansion() => _expansion.Solve(Grid);
 }
 
 /// <summary>
-/// Benchmark suite for the readable and optimized prefix implementations.
+/// Optimized-only benchmark across the engineered implementations of each algorithm family.
 /// </summary>
-public class PrefixImplementationBenchmarks : RectangleBenchmarkBase
+public class OptimizedRectangleBenchmarks : RectangleBenchmarkBase
 {
-    private readonly PrefixRectangleAlgorithm _prefix = new();
     private readonly OptimizedPrefixAlgorithm _optimizedPrefix = new();
-
-    protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
-        [_prefix, _optimizedPrefix];
-
-    [Benchmark(Baseline = true)]
-    public int[,] Prefix() => _prefix.Solve(Grid);
-
-    [Benchmark]
-    public int[,] PrefixOptimized() => _optimizedPrefix.Solve(Grid);
-}
-
-/// <summary>
-/// Benchmark suite for the readable and optimized expansion implementations.
-/// </summary>
-public class ExpansionImplementationBenchmarks : RectangleBenchmarkBase
-{
-    private readonly ExpansionRectangleAlgorithm _expansion = new();
+    private readonly OptimizedStackHistogramAlgorithm _optimizedStack = new();
     private readonly OptimizedExpansionAlgorithm _optimizedExpansion = new();
 
-    protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
-        [_expansion, _optimizedExpansion];
+    protected override IReadOnlyList<IRectangleAlgorithm>
+        ComparisonAlgorithms =>
+        [_optimizedPrefix, _optimizedStack, _optimizedExpansion];
 
     [Benchmark(Baseline = true)]
-    public int[,] Expansion() => _expansion.Solve(Grid);
+    public int[,] PrefixOptimized() => _optimizedPrefix.Solve(Grid);
+
+    [Benchmark]
+    public int[,] StackHistogramOptimized() => _optimizedStack.Solve(Grid);
 
     [Benchmark]
     public int[,] ExpansionOptimized() => _optimizedExpansion.Solve(Grid);

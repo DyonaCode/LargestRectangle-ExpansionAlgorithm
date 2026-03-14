@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeastRectangles", "LeastRec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{3F8FC3CA-E43E-4805-8725-97924500F39D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeastRectangles.Tests", "LeastRectangles.Tests\LeastRectangles.Tests.csproj", "{0E380F4B-BC86-47B6-84E9-0FE56F802C68}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LargestRectangles.Tests", "LargestRectangles.Tests\LargestRectangles.Tests.csproj", "{0E380F4B-BC86-47B6-84E9-0FE56F802C68}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

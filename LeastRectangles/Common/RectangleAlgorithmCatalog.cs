@@ -16,6 +16,7 @@ public static class RectangleAlgorithmCatalog
         [
             new PrefixRectangleAlgorithm(),
             new StackHistogramAlgorithm(),
+            new OptimizedStackHistogramAlgorithm(),
             new ExpansionRectangleAlgorithm(),
             new OptimizedPrefixAlgorithm(),
             new OptimizedExpansionAlgorithm()
