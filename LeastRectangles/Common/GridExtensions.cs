@@ -1,5 +1,10 @@
+using System.Text;
+
 namespace LeastRectangles.Common;
 
+/// <summary>
+/// Shared helpers for cloning, formatting, and visualizing grids.
+/// </summary>
 public static class GridExtensions
 {
     /// <summary>
@@ -47,15 +52,7 @@ public static class GridExtensions
             Console.WriteLine($"\n=== {title} ===");
         }
 
-        int rows = grid.GetLength(0);
-        int cols = grid.GetLength(1);
-
-        for (int r = 0; r < rows; r++)
-        {
-            for (int c = 0; c < cols; c++)
-                Console.Write($"{grid[r, c],3}");
-            Console.WriteLine();
-        }
+        Console.WriteLine(grid.ToDisplayString());
     }
 
     /// <summary>
@@ -64,5 +61,41 @@ public static class GridExtensions
     public static int[,] CreateWorkingCopy(this int[,] grid)
     {
         return (int[,])grid.Clone();
+    }
+
+    /// <summary>
+    /// Counts the number of distinct rectangle labels in a result grid.
+    /// </summary>
+    public static int CountRectangles(this int[,] grid)
+    {
+        var ids = new HashSet<int>();
+
+        for (int row = 0; row < grid.GetLength(0); row++)
+        for (int col = 0; col < grid.GetLength(1); col++)
+            if (grid[row, col] > 0)
+                ids.Add(grid[row, col]);
+
+        return ids.Count;
+    }
+
+    /// <summary>
+    /// Formats a grid into a stable multi-line string for diagnostics.
+    /// </summary>
+    public static string ToDisplayString(this int[,] grid)
+    {
+        var builder = new StringBuilder();
+        int rows = grid.GetLength(0);
+        int cols = grid.GetLength(1);
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+                builder.Append($"{grid[row, col],3}");
+
+            if (row < rows - 1)
+                builder.AppendLine();
+        }
+
+        return builder.ToString();
     }
 }

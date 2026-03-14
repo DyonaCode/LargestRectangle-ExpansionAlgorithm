@@ -31,7 +31,7 @@ namespace LeastRectangles.Algorithms;
 /// </summary>
 public class OptimizedExpansionAlgorithm : IRectangleAlgorithm
 {
-    public string Name => "Optimized Expansion";
+    public string Name => "Expansion (Optimized)";
 
     /// <summary>
     /// Compact rectangle representation using 8-bit integers for dimensions ≤ 255.
@@ -80,15 +80,18 @@ public class OptimizedExpansionAlgorithm : IRectangleAlgorithm
     /// <returns>2D result grid where each rectangle is assigned a unique positive integer ID</returns>
     public int[,] Solve(int[,] grid)
     {
-        byte rows = (byte)grid.GetLength(0);
-        byte cols = (byte)grid.GetLength(1);
-        int totalCells = rows * cols;
-        
-        // Validate grid size constraints for byte dimensions
-        if (rows > 255 || cols > 255)
+        int rowCount = grid.GetLength(0);
+        int colCount = grid.GetLength(1);
+
+        if (rowCount > byte.MaxValue || colCount > byte.MaxValue)
         {
-            throw new ArgumentException($"Grid dimensions ({rows}x{cols}) exceed maximum supported size of 255x255");
+            throw new ArgumentException(
+                $"Grid dimensions ({rowCount}x{colCount}) exceed maximum supported size of 255x255");
         }
+
+        byte rows = (byte)rowCount;
+        byte cols = (byte)colCount;
+        int totalCells = rows * cols;
         
         // Heap allocation for working arrays (no unsafe code)
         // Using compact data types for memory efficiency
@@ -104,8 +107,8 @@ public class OptimizedExpansionAlgorithm : IRectangleAlgorithm
         BuildPrefixRight(working, prefixRight, rows, cols);
 
         // Result array - each cell will contain the ID of the rectangle it belongs to
-        var result = new int[rows, cols];
-        byte rectId = 1;
+        var result = new int[rowCount, colCount];
+        int rectId = 1;
 
         // Main greedy loop: repeatedly find and remove largest rectangles
         while (true)
@@ -256,9 +259,12 @@ public class OptimizedExpansionAlgorithm : IRectangleAlgorithm
                     // Calculate current rectangle dimensions and area
                     int height = bottom - r + 1;
                     int area = height * minWidth;
+                    var candidate = new Rectangle(r, c, height, minWidth);
 
                     // Update best rectangle if current is larger
-                    if (area > bestArea)
+                    if (area > bestArea ||
+                        (area == bestArea &&
+                         RectangleSelection.IsBetterCandidate(candidate, best.ToRectangle())))
                     {
                         bestArea = area;
                         best = new Rect(r, c, height, minWidth);
@@ -294,7 +300,7 @@ public class OptimizedExpansionAlgorithm : IRectangleAlgorithm
         int[,] result,
         Span<byte> working, 
         Rect rect,
-        byte id, 
+        int id, 
         byte rows, 
         byte cols)
     {

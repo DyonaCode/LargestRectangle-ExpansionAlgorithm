@@ -25,7 +25,7 @@ public class OptimizedPrefixAlgorithm : IRectangleAlgorithm
     // Threshold for using array allocation vs ArrayPool
     private const int ArrayPoolThreshold = 1024;
 
-    public string Name => "Optimized Prefix (Safe)";
+    public string Name => "Prefix (Optimized)";
 
     public int[,] Solve(int[,] grid)
     {
@@ -137,9 +137,14 @@ public class OptimizedPrefixAlgorithm : IRectangleAlgorithm
                     // Calculate current rectangle area
                     int height = bottom - top + 1;
                     int area = height * minWidth;
+                    var candidate = new Rectangle(top, left, height, minWidth);
 
-                    // Update best rectangle if current is larger
-                    if (area > maxArea)
+                    // Update best rectangle using the shared deterministic tie-break rules
+                    if (area > maxArea ||
+                        (area == maxArea &&
+                         RectangleSelection.IsBetterCandidate(
+                             candidate,
+                             new Rectangle(bestTop, bestLeft, bestHeight, bestWidth))))
                     {
                         maxArea = area;
                         bestTop = top;
@@ -295,8 +300,13 @@ public static class PrefixRectangleByteGrid
 
                     int height = bottom - top + 1;
                     int area = height * minWidth;
+                    var candidate = new Rectangle(top, left, height, minWidth);
 
-                    if (area > maxArea)
+                    if (area > maxArea ||
+                        (area == maxArea &&
+                         RectangleSelection.IsBetterCandidate(
+                             candidate,
+                             new Rectangle(bestTop, bestLeft, bestHeight, bestWidth))))
                     {
                         maxArea = area;
                         bestTop = top;

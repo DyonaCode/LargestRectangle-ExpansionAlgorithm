@@ -2,9 +2,12 @@ using LeastRectangles.Common;
 
 namespace LeastRectangles.Algorithms;
 
+/// <summary>
+/// Readable prefix-based baseline that rebuilds row-width prefixes on each greedy step.
+/// </summary>
 public class PrefixRectangleAlgorithm : IRectangleAlgorithm
 {
-    public string Name => "Prefix Rectangle";
+    public string Name => "Prefix";
 
     public int[,] Solve(int[,] grid)
     {
@@ -21,8 +24,7 @@ public class PrefixRectangleAlgorithm : IRectangleAlgorithm
         // Step 1: Build row prefix (consecutive 1s to the right)
         int[,] prefix = GeneratePrefixes(grid, rows, cols);
 
-        int maxArea = 0;
-        var rect = new Rectangle(0, 0, 0, 0);
+        Rectangle best = default;
 
         // Step 2: Try each cell as top-left
         for (int top = 0; top < rows; top++)
@@ -38,18 +40,15 @@ public class PrefixRectangleAlgorithm : IRectangleAlgorithm
                     if (prefix[bottom, left] == 0) break;
 
                     minWidth = Math.Min(minWidth, prefix[bottom, left]);
-                    int height = bottom - top + 1;
-                    int area = height * minWidth;
+                    var candidate = new Rectangle(top, left, bottom - top + 1, minWidth);
 
-                    if (area > maxArea)
-                    {
-                        maxArea = area;
-                        rect = new Rectangle(top, left, height, minWidth);
-                    }
+                    if (RectangleSelection.IsBetterCandidate(candidate, best))
+                        best = candidate;
                 }
             }
         }
-        return rect;
+
+        return best;
     }
 
     private static int[,] GeneratePrefixes(int[,] grid, int rows, int cols)

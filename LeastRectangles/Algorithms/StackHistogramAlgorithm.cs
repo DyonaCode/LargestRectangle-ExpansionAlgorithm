@@ -2,6 +2,9 @@ using LeastRectangles.Common;
 
 namespace LeastRectangles.Algorithms;
 
+/// <summary>
+/// Readable histogram-stack baseline that finds the next rectangle via row histograms.
+/// </summary>
 public class StackHistogramAlgorithm : IRectangleAlgorithm
 {
     public string Name => "Stack Histogram";
@@ -50,8 +53,7 @@ public class StackHistogramAlgorithm : IRectangleAlgorithm
 
         int[] heights = new int[cols];
 
-        int bestArea = 0;
-        int bestRow = 0, bestCol = 0, bestHeight = 0, bestWidth = 0;
+        Rectangle best = default;
 
         for (int r = 0; r < rows; r++)
         {
@@ -72,22 +74,17 @@ public class StackHistogramAlgorithm : IRectangleAlgorithm
                     int top = stack.Pop();
                     int height = heights[top];
                     int width = stack.Count == 0 ? i : i - stack.Peek() - 1;
-                    int area = height * width;
+                    int bestCol = stack.Count == 0 ? 0 : stack.Peek() + 1;
+                    var candidate = new Rectangle(r - height + 1, bestCol, height, width);
 
-                    if (area > bestArea)
-                    {
-                        bestArea = area;
-                        bestHeight = height;
-                        bestWidth = width;
-                        bestRow = r - height + 1;
-                        bestCol = stack.Count == 0 ? 0 : stack.Peek() + 1;
-                    }
+                    if (RectangleSelection.IsBetterCandidate(candidate, best))
+                        best = candidate;
                 }
 
                 stack.Push(i);
             }
         }
 
-        return new Rectangle(bestRow, bestCol, bestHeight, bestWidth);
+        return best;
     }
 }

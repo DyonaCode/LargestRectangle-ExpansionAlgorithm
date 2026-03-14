@@ -1,92 +1,127 @@
-﻿using System;
-using System.Collections.Generic;
-using BenchmarkDotNet.Attributes;
+﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Order;
 using BenchmarkDotNet.Running;
 using LeastRectangles.Algorithms;
 using LeastRectangles.Common;
 
 namespace Benchmark;
 
+/// <summary>
+/// Benchmark entry point.
+/// </summary>
 public static class Program
 {
     public static void Main(string[] args)
     {
-        BenchmarkRunner.Run<RectangleAlgorithmsBenchmark>();
+        BenchmarkRunner.Run(typeof(Program).Assembly);
     }
 }
 
+/// <summary>
+/// Shared setup for deterministic rectangle benchmark suites.
+/// </summary>
 [MemoryDiagnoser]
-public class RectangleAlgorithmsBenchmark
+[Orderer(SummaryOrderPolicy.FastestToSlowest)]
+public abstract class RectangleBenchmarkBase
 {
-    [Params(20, 50, 100)]
-    public int GridSize;
+    [Params(32, 64, 128)]
+    public int Size;
 
-    private int[,] grid;
+    [Params(ComparisonScenario.Random35, 
+        ComparisonScenario.Random50, 
+        ComparisonScenario.Random70, 
+        ComparisonScenario.Rooms)]
+    public ComparisonScenario Scenario;
+
+    protected int[,] Grid = default!;
 
     [GlobalSetup]
     public void Setup()
     {
-        grid = GridGenerator.CreateRandomGrid(GridSize, GridSize);
+        Grid = CreateGrid(Scenario, Size);
+        AlgorithmComparison.AssertDeterministicallyEquivalent(ComparisonAlgorithms, Grid);
     }
 
-  //  [Benchmark]
-    public int PrefixRectangleAlgorithmTest()
+    protected abstract IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms { get; }
+
+    private static int[,] CreateGrid(ComparisonScenario scenario, int size)
     {
-        var algorithm = new PrefixRectangleAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
+        return scenario switch
+        {
+            ComparisonScenario.Random35 => GridGenerator.CreateRandomGrid(size, size, 0.35, 1000 + size),
+            ComparisonScenario.Random50 => GridGenerator.CreateRandomGrid(size, size, 0.50, 2000 + size),
+            ComparisonScenario.Random70 => GridGenerator.CreateRandomGrid(size, size, 0.70, 3000 + size),
+            ComparisonScenario.Rooms => GridGenerator.CreateRoomsGrid(size),
+            _ => throw new ArgumentOutOfRangeException(nameof(scenario), scenario, null)
+        };
     }
-    
-   // [Benchmark]
-    public int OptiPrefixRectangleAlgorithmTest()
-    {
-        var algorithm = new OptimizedPrefixAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
-    }
+}
+
+/// <summary>
+/// Named benchmark input scenarios.
+/// </summary>
+public enum ComparisonScenario
+{
+    Random35,
+    Random50,
+    Random70,
+    Rooms
+}
+
+/// <summary>
+/// Public apples-to-apples benchmark across the readable algorithm implementations.
+/// </summary>
+public class ReferenceRectangleBenchmarks : RectangleBenchmarkBase
+{
+    private readonly PrefixRectangleAlgorithm _prefix = new();
+    private readonly StackHistogramAlgorithm _stack = new();
+    private readonly ExpansionRectangleAlgorithm _expansion = new();
+
+    protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
+        [_prefix, _stack, _expansion];
+
+    [Benchmark(Baseline = true)]
+    public int[,] Prefix() => _prefix.Solve(Grid);
 
     [Benchmark]
-    public int OptimizedExpansionTest()
-    {
-        var algorithm = new OptimizedExpansionAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
-    }
-
-   public int HistogramStackTest()
-    {
-        var algorithm = new StackHistogramAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
-    }
+    public int[,] StackHistogram() => _stack.Solve(Grid);
 
     [Benchmark]
-    public int OptimizedBranchingTest()
-    {
-        var algorithm = new OptimizedBranchingAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
-    }
+    public int[,] Expansion() => _expansion.Solve(Grid);
+}
 
- //   [Benchmark]
-    public int RandomizedRectangleTest()
-    {
-        var algorithm = new RandomizedRectangleAlgorithm();
-        var result = algorithm.Solve(grid);
-        return CountUniqueRectangles(result);
-    }
+/// <summary>
+/// Benchmark suite for the readable and optimized prefix implementations.
+/// </summary>
+public class PrefixImplementationBenchmarks : RectangleBenchmarkBase
+{
+    private readonly PrefixRectangleAlgorithm _prefix = new();
+    private readonly OptimizedPrefixAlgorithm _optimizedPrefix = new();
 
-    private static int CountUniqueRectangles(int[,] grid)
-    {
-        int rows = grid.GetLength(0);
-        int cols = grid.GetLength(1);
-        int maxId = 0;
+    protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
+        [_prefix, _optimizedPrefix];
 
-        for (int r = 0; r < rows; r++)
-        for (int c = 0; c < cols; c++)
-            maxId = Math.Max(maxId, grid[r, c]);
+    [Benchmark(Baseline = true)]
+    public int[,] Prefix() => _prefix.Solve(Grid);
 
-        return maxId;
-    }
+    [Benchmark]
+    public int[,] PrefixOptimized() => _optimizedPrefix.Solve(Grid);
+}
 
+/// <summary>
+/// Benchmark suite for the readable and optimized expansion implementations.
+/// </summary>
+public class ExpansionImplementationBenchmarks : RectangleBenchmarkBase
+{
+    private readonly ExpansionRectangleAlgorithm _expansion = new();
+    private readonly OptimizedExpansionAlgorithm _optimizedExpansion = new();
+
+    protected override IReadOnlyList<IRectangleAlgorithm> ComparisonAlgorithms =>
+        [_expansion, _optimizedExpansion];
+
+    [Benchmark(Baseline = true)]
+    public int[,] Expansion() => _expansion.Solve(Grid);
+
+    [Benchmark]
+    public int[,] ExpansionOptimized() => _optimizedExpansion.Solve(Grid);
 }

@@ -3,3 +3,9 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+Benchmark/BenchmarkDotNet.Artifacts/
+BenchmarkDotNet.Artifacts/
+TestResults/
+*.trx
+*.user
+*.DotSettings.user
