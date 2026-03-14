@@ -3,7 +3,15 @@
 Deterministic experiments for translating binary grids into non-overlapping rectangles.
 
 Popular methods include `StackHistogram` and `Prefix`. This repo intends to propose a new solution to this 
-problem. 
+problem, an 'Expansion' algorithm. 
+
+This algorithm:
+- Maintains a working grid (1D byte array) representing available cells
+- Builds prefix arrays containing consecutive 1s count from right to left for each row
+- For each potential top-left corner, expands rectangles downward using prefix data
+- Greedily selects the largest area rectangle found
+- Updates working grid and incrementally rebuilds affected prefix rows
+- Continues until no valid rectangles remain
 
 ## Algorithmic Comparison
 
